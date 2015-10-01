@@ -21,4 +21,16 @@ defmodule Docs.DocumentChannel do
   end
   # cannot broadcast directly from the client
 
+  def handle_in("save", params, socket) do
+    Document
+    |> Repo.get(socket.assigns.doc_id)
+    |> Document.changeset(params)
+    |> Repo.update()
+    |> case do
+      {:ok, _document} ->
+        {:reply, :ok, socket}
+      {:error, changeset} ->
+        {:reply, {:error, %{reasons: changeset}}, socket}
+    end
+  end
 end

@@ -6,8 +6,14 @@ defmodule Docs.UserSocket do
   channel "documents:*", Docs.DocumentChannel
 
   ## Transports
-  transport :websocket, Phoenix.Transports.WebSocket, check_origin: false
+  transport :websocket, Phoenix.Transports.WebSocket, check_origin: ["localhost"]
   # transport :longpoll, Phoenix.Transports.LongPoll
+
+  # by default, we will check the origin for security
+  #   maybe a service like Pusher would not want to check, but usually you would
+  #   want to check clients from the same webapp
+  #   check_origin: ["urwebsite.com"]
+  #   need to do this as there is no cross-origin projection like AJAX
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After

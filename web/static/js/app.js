@@ -30,8 +30,8 @@ let App = {
   init(){
     let docId = $("#doc-form").data("id")
     let docChan = socket.channel("documents:" + docId)
-
-    let editor = new Quill("#editor")
+    let docForm = $("#doc-form")
+    let editor = new Quill("#doc-form #editor")
 
     // text-change is quill api
     // snake-case is phoenix convention
@@ -44,6 +44,15 @@ let App = {
       // to server
       docChan.push("text_change", {opts: ops})
         // .receive("ok", console.log("sent text-change to server"))
+    })
+
+    docForm.on("submit", e => {
+      e.preventDefault()
+      let body = editor.getHTML()
+      let title = docForm.find("#document_title").val()
+      docChan.push("save", {body: body, title: title})
+        .receive("ok", () => console.log("persisted document"))
+        .receive("error", () => console.log("couldn't save document"))
     })
 
     // from server
