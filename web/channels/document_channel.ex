@@ -5,7 +5,14 @@ defmodule Docs.DocumentChannel do
   # socket is passed around like plug
   # socket holds the state (gen server under the hood)
   def join("documents:" <> doc_id, params, socket) do
-    doc = Repo.get(Document, doc_id)
+    # need to wait until after subscribed to genserver for messages:
+    send(self, {:after_join, params})
+    {:ok, assign(socket, :doc_id, doc_id)}
+  end
+
+  # cannot throw it into an agent if we are running on more than one node/computer
+  def handle_info({:after_join,  params}, socket) do
+    doc = Repo.get(Document, socket.assigns.doc_id)
     messages = Repo.all(
       from m in assoc(doc, :messages),
         order_by: [desc: m.inserted_at],
@@ -13,15 +20,10 @@ defmodule Docs.DocumentChannel do
         where: m.id > ^params["last_message_id"],
         limit: 100
     )
+    push socket, "messages", %{messages: messages}
     # ^ should encode with a view, but lazy for class
-    {:ok, %{messages: messages},
-          assign(socket, :doc_id, doc_id)}
+    {:noreply, socket}
   end
-
-  # def handle_info(:after_join, socket) do
-    # push ... #update the client
-    # # this is an extra round-trip and could be expensive
-  # end
 
   # send string key to avoid vulnerability to arbitray atoms
   def handle_in("text_change", %{"ops" => ops}, socket) do

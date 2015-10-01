@@ -81,12 +81,14 @@ let App = {
       editor.updateContents(opts)
     })
 
-    docChan.join()
-      .receive("ok", ({messages}) => {
-        messages.reverse().forEach(m => {
-          this.appendMessage(m, msgContainer, docChan)
-        })
+    docChan.on("messages", ({messages}) => {
+      messages.reverse().forEach(m => {
+        this.appendMessage(m, msgContainer, docChan)
       })
+    })
+
+    docChan.join()
+      .receive("ok", resp => console.log("joined documents channel"))
       .receive("error", resp => console.log("FAILED to join documents channel", reason))
   },
   save(docChan, docForm, editor) {
