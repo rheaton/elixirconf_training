@@ -7,6 +7,8 @@ defmodule Docs.InfoSys do
     backend.start_link(opts)
   end
 
+
+  # Task is for parallelizable work (simple task/cheap concurrency, e.g. ecto query)
   def compute_img(expr) do
     @backends
     |> Enum.map(fn backend ->
