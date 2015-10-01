@@ -34,6 +34,7 @@ socket.onOpen(() => console.log("connected to a socket"))
 let App = {
   init(){
     let docId = $("#doc-form").data("id")
+    if(!docId) { return }
     let docChan = socket.channel("documents:" + docId)
     docChan.params["last_message_id"] = 0
     let docForm = $("#doc-form")
