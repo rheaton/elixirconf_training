@@ -74,11 +74,20 @@ defmodule Docs.DocumentChannel do
       _ -> ""
     end
 
-
     broadcast! socket, "insert_img", %{
       start: params["start"],
       end: params["end"],
       url: img_url
+    }
+    {:reply, :ok, socket}
+  end
+
+  def handle_in("selection_change", params, socket) do
+    broadcast! socket, "selection_change", %{
+      user_id: params["user_id"],
+      end: params["end"],
+      username: params["user_id"],
+      color: params["color"]
     }
     {:reply, :ok, socket}
   end

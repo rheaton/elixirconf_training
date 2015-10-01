@@ -43,6 +43,11 @@ let App = {
     let msgContainer = $("#messages")
     let msgInput = $("#message-input")
     let saveTimer = null
+    let authorInput = $("#document_author")
+    authorInput.val("Guest: " + Math.floor(Math.random() * 1000))
+    let multiCursor = editor.addModule('multi-cursor', {
+      timeout: 10000000
+    })
 
     msgInput.on("keypress", e => {
       if (e.which !== 13) { return }
@@ -80,6 +85,32 @@ let App = {
       // to server
       docChan.push("text_change", {ops: ops})
         // .receive("ok", console.log("sent text-change to server"))
+    })
+
+    editor.on("selection-change", range => {
+      if(!range) {return}
+      let author = authorInput.val()
+      multiCursor.setCursor(
+        author,
+        range.end,
+        author,
+        "rgb(255, 0, 255)"
+      )
+      docChan.push("selection_change", {
+        user_id: author,
+        end: range.end,
+        username: author,
+        color: "rgb(255, 0, 255)"
+      })
+    })
+
+    docChan.on("selection_change", ({user_id, end, username, color}) => {
+      multiCursor.setCursor(
+        user_id,
+        end,
+        username,
+        color
+      )
     })
 
     docForm.on("submit", e => {
