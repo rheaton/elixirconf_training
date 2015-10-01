@@ -19,3 +19,9 @@ import "deps/phoenix_html/web/static/js/phoenix_html"
 // paths "./socket" or full ones "web/static/js/socket".
 
 // import socket from "./socket"
+import {Socket} from "deps/phoenix/web/static/js/phoenix"
+
+// endpoint from endpoint.ex
+let socket = new Socket("/socket", {params: {token: window.userToken}})
+socket.connect()
+socket.onOpen( () => console.log("connected to ur socket"))
