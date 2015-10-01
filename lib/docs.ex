@@ -9,7 +9,7 @@ defmodule Docs do
     children = [
       # Start the endpoint when the application starts
       supervisor(Docs.Endpoint, []),
-      supervisor(Docs.InfoSys,Supervisor, []),
+      supervisor(Docs.InfoSys.Supervisor, []),
       # Start the Ecto repository
       # worker(Docs.Counter, [10]),
       worker(Docs.Repo, []),

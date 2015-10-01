@@ -1,6 +1,5 @@
 defmodule Docs.DocumentChannel do
   use Docs.Web, :channel
-  import SweetXml
 
   # plural by convention 'documents'
   # socket is passed around like plug
@@ -60,28 +59,20 @@ defmodule Docs.DocumentChannel do
 
     case Repo.insert(changeset) do
       {:ok, msg} ->
-        broadcast! socket, "new_message", %{body: params["body"]}
+        broadcast! socket, "new_message", %{body: msg.body}
         {:reply, :ok, socket}
       {:error, changeset} ->
         {:reply, {:error, %{reasons: changeset}}, socket}
     end
   end
 
-  defp app_id(), do: Application.get_env(:docs, :wolfram)[:app_id]
 
   def handle_in("compute_img", params, socket) do
-    input = URI.encode(params["expr"])
-    {:ok, {_, _, body}} = :httpc.request(String.to_char_list(
-      "http://api.wolframalpha.com/v2/query?appid=#{app_id()}&input=#{input}&format=image,plaintext"
-    ))
-
-    img_url =
-      body
-      |> xpath(~x"/queryresult/pod[contains(@title, 'Result') or
-                                contains(@title, 'Results') or
-                                contains(@title, 'Plot')]
-                          /subpod/img/@src")
-      |> to_string()
+    img_url = case Docs.InfoSys.compute_img(params["expr"]) do
+      # don't care about anything but img_url
+      [%{img_url: img_url} | _] -> img_url
+      _ -> ""
+    end
 
 
     broadcast! socket, "insert_img", %{
