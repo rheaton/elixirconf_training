@@ -1,5 +1,6 @@
 defmodule Docs.DocumentChannel do
   use Docs.Web, :channel
+  intercept ["new_message"]
 
   # plural by convention 'documents'
   # socket is passed around like plug
@@ -90,5 +91,12 @@ defmodule Docs.DocumentChannel do
       color: params["color"]
     }
     {:reply, :ok, socket}
+  end
+
+  # will just get passed through unless intercept
+  #   this will make stuff slower
+  def handle_out("new_message", params, socket) do
+    push socket, "new_message", Map.merge(params, %{extra_stuff: "we can do stuff here"})
+    {:noreply, socket}
   end
 end
