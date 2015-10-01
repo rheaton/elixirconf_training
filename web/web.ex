@@ -54,6 +54,7 @@ defmodule Docs.Web do
     end
   end
 
+  # this is used when we `use Docs.Web, :channel` by the thing at the bottom
   def channel do
     quote do
       use Phoenix.Channel
@@ -66,6 +67,14 @@ defmodule Docs.Web do
 
     end
   end
+
+  # don't define shared functions in this file-- create a module
+  # e.g.
+  # defmodule ViewHelpers
+  # end
+  # ...
+  # import ViewHelpers (in this file)
+  # defining functions in here will make the compiler slow and sad -JV
 
   @doc """
   When used, dispatch to the appropriate controller/view/etc.

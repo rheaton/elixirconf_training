@@ -3,6 +3,7 @@ defmodule Docs.UserSocket do
 
   ## Channels
   # channel "rooms:*", Docs.RoomChannel
+  channel "documents:*", Docs.DocumentChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket, check_origin: false
@@ -17,7 +18,7 @@ defmodule Docs.UserSocket do
   #
   #  To deny connection, return `:error`.
   def connect(_params, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, :user_id, :guest)}
   end
 
   # Socket id's are topics that allow you to identify all sockets for a given user:
@@ -31,4 +32,6 @@ defmodule Docs.UserSocket do
   #
   # Returning `nil` makes this socket anonymous.
   def id(_socket), do: nil
+
+  # ^ so we could ban a user
 end

@@ -24,4 +24,39 @@ import {Socket} from "deps/phoenix/web/static/js/phoenix"
 // endpoint from endpoint.ex
 let socket = new Socket("/socket", {params: {token: window.userToken}})
 socket.connect()
-socket.onOpen( () => console.log("connected to ur socket"))
+socket.onOpen(() => console.log("connected to a socket"))
+
+let App = {
+  init(){
+    let docId = $("#doc-form").data("id")
+    let docChan = socket.channel("documents:" + docId)
+
+    let editor = new Quill("#editor")
+
+    // text-change is quill api
+    // snake-case is phoenix convention
+
+    // ops: what made the change
+    // source: can be programatically, or by user
+    editor.on("text-change", (ops, source) => {
+      if( source !== "user") {return}
+
+      // to server
+      docChan.push("text_change", {opts: ops})
+        // .receive("ok", console.log("sent text-change to server"))
+    })
+
+    // from server
+    docChan.on("text_change", ({ops}) => {
+      editor.updateContents(opts)
+    })
+
+    docChan.join()
+      .receive("ok", resp => console.log("joined documents channel", resp))
+      .receive("error", resp => console.log("FAILED to join documents channel", reason))
+  }
+}
+
+App.init()
+
+// vendor/*js is available above your customer stuff
