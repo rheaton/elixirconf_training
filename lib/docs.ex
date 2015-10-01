@@ -10,6 +10,7 @@ defmodule Docs do
       # Start the endpoint when the application starts
       supervisor(Docs.Endpoint, []),
       supervisor(Docs.InfoSys.Supervisor, []),
+      supervisor(Task.Supervisor, [[name: Docs.TaskSupervisor]]),
       # Start the Ecto repository
       # worker(Docs.Counter, [10]),
       worker(Docs.Repo, []),
