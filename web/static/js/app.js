@@ -38,6 +38,7 @@ let App = {
     let docChan = socket.channel("documents:" + docId)
     docChan.params["last_message_id"] = 0
     let docForm = $("#doc-form")
+    let editorContainer = docForm.find("#editor")
     let editor = new Quill("#doc-form #editor")
     let msgContainer = $("#messages")
     let msgInput = $("#message-input")
@@ -48,6 +49,15 @@ let App = {
 
       docChan.push("new_message", {body: msgInput.val()})
       msgInput.val("")
+    })
+
+    editorContainer.on("keydown", e => {
+      if (e.which !== 13 || !e.metaKey) { return }
+
+      let {start, end} = editor.getSelection()
+      let expr = editor.getText(start, end)
+      // es6 will make that {expr: expr, start: start, end: end}
+      docChan.push("compute_img", {expr, start, end})
     })
 
     docChan.on("new_message", msg => {
@@ -68,7 +78,7 @@ let App = {
       }, 2500)
 
       // to server
-      docChan.push("text_change", {opts: ops})
+      docChan.push("text_change", {ops: ops})
         // .receive("ok", console.log("sent text-change to server"))
     })
 
@@ -86,6 +96,13 @@ let App = {
       messages.reverse().forEach(m => {
         this.appendMessage(m, msgContainer, docChan)
       })
+    })
+
+    docChan.on("insert_img", ({url, start, end}) => {
+      if (url) {
+        editor.deleteText(start, end)
+        editor.insertEmbed(start, "image", url)
+      }
     })
 
     docChan.join()

@@ -1,5 +1,6 @@
 defmodule Docs.DocumentChannel do
   use Docs.Web, :channel
+  import SweetXml
 
   # plural by convention 'documents'
   # socket is passed around like plug
@@ -29,9 +30,9 @@ defmodule Docs.DocumentChannel do
   def handle_in("text_change", %{"ops" => ops}, socket) do
     # broadcast: broadcast to everyone including broadcaster
     # broadcast_from: broadcast to everyone except broadcaster
-    broadcast_from! socket, "text_change", %{
+    broadcast_from!(socket, "text_change", %{
       ops: ops
-    }
+    })
     # {:noreply, socket} # this is okay
     {:reply, :ok, socket} # this is slightly more expensive, but clearer (for example, could hide spinner)
   end
@@ -64,5 +65,30 @@ defmodule Docs.DocumentChannel do
       {:error, changeset} ->
         {:reply, {:error, %{reasons: changeset}}, socket}
     end
+  end
+
+  defp app_id(), do: Application.get_env(:docs, :wolfram)[:app_id]
+
+  def handle_in("compute_img", params, socket) do
+    input = URI.encode(params["expr"])
+    {:ok, {_, _, body}} = :httpc.request(String.to_char_list(
+      "http://api.wolframalpha.com/v2/query?appid=#{app_id()}&input=#{input}&format=image,plaintext"
+    ))
+
+    img_url =
+      body
+      |> xpath(~x"/queryresult/pod[contains(@title, 'Result') or
+                                contains(@title, 'Results') or
+                                contains(@title, 'Plot')]
+                          /subpod/img/@src")
+      |> to_string()
+
+
+    broadcast! socket, "insert_img", %{
+      start: params["start"],
+      end: params["end"],
+      url: img_url
+    }
+    {:reply, :ok, socket}
   end
 end
