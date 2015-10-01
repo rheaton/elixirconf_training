@@ -4,7 +4,7 @@ defmodule Docs.Counter do
   end
 
   def init(initial_value) do
-    :timer.send_interval(2000, :tick)
+    # :timer.send_interval(2000, :tick)
     {:ok, initial_value}
   end
 
@@ -14,10 +14,10 @@ defmodule Docs.Counter do
   def handle_cast(:dec, val) do
     {:noreply, val - 1}
   end
-  def handle_info(:tick, val) do
-    if val < 5, do: raise "NO"
-    {:noreply, val - 1}
-  end
+  # def handle_info(:tick, val) do
+    # if val < 5, do: raise "NO"
+    # {:noreply, val - 1}
+  # end
 
   def inc(counter) do
     GenServer.cast(counter, :inc)
