@@ -1,7 +1,7 @@
 defmodule Docs.InfoSys do
   # could eventually support Bing search, Wolfram search, as Docs.InfoSys.Wolfram
 
-  @backends [Docs.InfoSys.Wolfram]
+  @backends [Docs.InfoSys.Wolfram, Docs.InfoSys.Cats]
 
   def start_link(backend, opts) do
     backend.start_link(opts)
