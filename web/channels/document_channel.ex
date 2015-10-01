@@ -4,10 +4,24 @@ defmodule Docs.DocumentChannel do
   # plural by convention 'documents'
   # socket is passed around like plug
   # socket holds the state (gen server under the hood)
-  def join("documents:" <> doc_id, _params, socket) do
-    {:ok, assign(socket, :doc_id, doc_id)}
+  def join("documents:" <> doc_id, params, socket) do
+    doc = Repo.get(Document, doc_id)
+    messages = Repo.all(
+      from m in assoc(doc, :messages),
+        order_by: [desc: m.inserted_at],
+        select: %{id: m.id, body: m.body},
+        where: m.id > ^params["last_message_id"],
+        limit: 100
+    )
+    # ^ should encode with a view, but lazy for class
+    {:ok, %{messages: messages},
+          assign(socket, :doc_id, doc_id)}
   end
 
+  # def handle_info(:after_join, socket) do
+    # push ... #update the client
+    # # this is an extra round-trip and could be expensive
+  # end
 
   # send string key to avoid vulnerability to arbitray atoms
   def handle_in("text_change", %{"ops" => ops}, socket) do
@@ -28,6 +42,22 @@ defmodule Docs.DocumentChannel do
     |> Repo.update()
     |> case do
       {:ok, _document} ->
+        {:reply, :ok, socket}
+      {:error, changeset} ->
+        {:reply, {:error, %{reasons: changeset}}, socket}
+    end
+  end
+
+  def handle_in("new_message", params, socket) do
+    changeset =
+      Document
+      |> Repo.get(socket.assigns.doc_id)
+      |> Ecto.Model.build(:messages)
+      |> Message.changeset(params)
+
+    case Repo.insert(changeset) do
+      {:ok, msg} ->
+        broadcast! socket, "new_message", %{body: params["body"]}
         {:reply, :ok, socket}
       {:error, changeset} ->
         {:reply, {:error, %{reasons: changeset}}, socket}

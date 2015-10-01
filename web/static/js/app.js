@@ -35,9 +35,23 @@ let App = {
   init(){
     let docId = $("#doc-form").data("id")
     let docChan = socket.channel("documents:" + docId)
+    docChan.params["last_message_id"] = 0
     let docForm = $("#doc-form")
     let editor = new Quill("#doc-form #editor")
+    let msgContainer = $("#messages")
+    let msgInput = $("#message-input")
     let saveTimer = null
+
+    msgInput.on("keypress", e => {
+      if (e.which !== 13) { return }
+
+      docChan.push("new_message", {body: msgInput.val()})
+      msgInput.val("")
+    })
+
+    docChan.on("new_message", msg => {
+      this.appendMessage(msg, msgContainer, docChan)
+    })
 
     // text-change is quill api
     // snake-case is phoenix convention
@@ -68,7 +82,11 @@ let App = {
     })
 
     docChan.join()
-      .receive("ok", resp => console.log("joined documents channel", resp))
+      .receive("ok", ({messages}) => {
+        messages.reverse().forEach(m => {
+          this.appendMessage(m, msgContainer, docChan)
+        })
+      })
       .receive("error", resp => console.log("FAILED to join documents channel", reason))
   },
   save(docChan, docForm, editor) {
@@ -77,6 +95,13 @@ let App = {
     docChan.push("save", {body: body, title: title})
     .receive("ok", () => console.log("persisted document"))
     .receive("error", () => console.log("couldn't save document"))
+  },
+  appendMessage(msg, msgContainer, docChan) {
+    if (docChan.params["last_message_id"] < msg.id) {
+      docChan.params["last_message_id"] = msg.id
+    }
+    msgContainer.append(`<br/>${msg.body}`)
+    msgContainer.scrollTop(msgContainer.prop("scrollHeight"))
   }
 }
 

@@ -6,7 +6,7 @@ defmodule Docs.UserSocket do
   channel "documents:*", Docs.DocumentChannel
 
   ## Transports
-  transport :websocket, Phoenix.Transports.WebSocket, check_origin: ["localhost"]
+  transport :websocket, Phoenix.Transports.WebSocket, check_origin: false
   # transport :longpoll, Phoenix.Transports.LongPoll
 
   # by default, we will check the origin for security
