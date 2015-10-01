@@ -22,7 +22,12 @@ import "deps/phoenix_html/web/static/js/phoenix_html"
 import {Socket} from "deps/phoenix/web/static/js/phoenix"
 
 // endpoint from endpoint.ex
-let socket = new Socket("/socket", {params: {token: window.userToken}})
+let socket = new Socket("/socket", {
+  logger: (kind, msg, data) => {
+    console.log(`${kind}: ${msg}`, data)
+  },
+  params: {token: window.userToken}
+})
 socket.connect()
 socket.onOpen(() => console.log("connected to a socket"))
 
