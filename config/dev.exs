@@ -34,5 +34,4 @@ config :docs, Docs.Repo,
   database: "docs_dev",
   size: 10 # The amount of database connections in the pool
 
-
-config :docs, :wolfram, app_id: "6G9GPL-GXY5HQAXYX"
+import_config "local.exs"
