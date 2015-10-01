@@ -32,6 +32,7 @@ let App = {
     let docChan = socket.channel("documents:" + docId)
     let docForm = $("#doc-form")
     let editor = new Quill("#doc-form #editor")
+    let saveTimer = null
 
     // text-change is quill api
     // snake-case is phoenix convention
@@ -39,7 +40,12 @@ let App = {
     // ops: what made the change
     // source: can be programatically, or by user
     editor.on("text-change", (ops, source) => {
-      if( source !== "user") {return}
+      if(source !== "user") {return}
+
+      clearTimeout(saveTimer)
+      saveTimer = setTimeout(() => {
+        this.save(docChan, docForm, editor)
+      }, 2500)
 
       // to server
       docChan.push("text_change", {opts: ops})
@@ -48,11 +54,7 @@ let App = {
 
     docForm.on("submit", e => {
       e.preventDefault()
-      let body = editor.getHTML()
-      let title = docForm.find("#document_title").val()
-      docChan.push("save", {body: body, title: title})
-        .receive("ok", () => console.log("persisted document"))
-        .receive("error", () => console.log("couldn't save document"))
+      this.save(docChan, docForm, editor)
     })
 
     // from server
@@ -63,6 +65,13 @@ let App = {
     docChan.join()
       .receive("ok", resp => console.log("joined documents channel", resp))
       .receive("error", resp => console.log("FAILED to join documents channel", reason))
+  },
+  save(docChan, docForm, editor) {
+    let body = editor.getHTML()
+    let title = docForm.find("#document_title").val()
+    docChan.push("save", {body: body, title: title})
+    .receive("ok", () => console.log("persisted document"))
+    .receive("error", () => console.log("couldn't save document"))
   }
 }
 
