@@ -27,6 +27,12 @@ defmodule Docs.MessageController do
 
     case Repo.insert(changeset) do
       {:ok, msg} ->
+        # you can broadcast from non-channels or some other node that is doing something else
+        #    e.g. watching twitter or something
+        Docs.Endpoint.broadcast("documents:#{doc.id}", "new_message", %{
+          id: msg.id,
+          body: msg.body
+        })
         conn
         |> put_flash(:info, "Message created successfully.")
         |> redirect(to: document_message_path(conn, :index, conn.assigns.document))
